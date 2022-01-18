@@ -28,20 +28,19 @@ def main():
                         default=False, nargs=4,
                         help='Run grid search? arg[0]: size of gammas, arg[1:] arguments of np.arange')
     parser.add_argument('--gamma', dest='gamma', action='store', type=float,
-                        default=0.2, nargs=1,
+                        default=0.2,
                         help='set gamma hyperparameter. gamma=1 is sharpe maximization, '
                              'gamma=0 is risk parity optimization')
 
     args = parser.parse_args()
-    # print(args.metric)
-    Pf = Portfolio(args)
+    Pf = Portfolio(args=args)
     if args.tune:
         print("Running grid search")
         args.gamma, args.rebalance = grid_search(Pf, *args.tune)
         print(args.gamma, args.rebalance)
     if args.short:
         raise NotImplementedError("Short portfolios not implemented")
-    Pf = Portfolio(args)
+    Pf = Portfolio(args=args)
     Pf.optimize()
     Pf.plot_perf()
     Pf.plot_sharpes()

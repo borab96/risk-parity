@@ -26,25 +26,24 @@ def grid_search(Pf, *args):
 
 
 class Portfolio:
-    def __init__(self, args=False):
-        if args:
-            self.args = args
-            self.symbols = args.symbols
-            self.period = args.period
-            self.rebalance = int(args.rebalance)
-            self.leverage = args.leverage
-            self.cash = args.cash*self.leverage
-            self.gamma = args.gamma
+    def __init__(self,
+                 *symbols,
+                 period='2y',
+                 rebalance=15,
+                 leverage=1.0,
+                 cash=10000,
+                 gamma=0.2,
+                 risk_free_rate=0.0,
+                 args=False):
+        self.args = args if args else None
+        self.symbols = args.symbols if args else symbols
+        self.period = args.period if args else period
+        self.rebalance = int(args.rebalance) if args else rebalance
+        self.leverage = args.leverage if args else leverage
+        self.cash = args.cash*self.leverage if args else cash*self.leverage
+        self.gamma = args.gamma if args else gamma
+        self.risk_free_rate = risk_free_rate
         self.data = pd.DataFrame(columns=self.symbols)
-        for t in self.symbols+["SPY"]:
-            ticker = yf.Ticker(t)
-            close = ticker.history(period=self.period).Close#.rolling(1).mean()
-            if t=="SPY":
-                self.benchmark = np.log(close).diff().dropna()
-                self.benchmark.name = "SPY"
-            else:
-                self.data[t] = np.log(close).diff().dropna()
-        self.risk_free_rate = 0.00
         self.trade_days = 252
         self.optimizer = opt.slsqp
         self.metric = metrics.rcp_error
@@ -55,7 +54,18 @@ class Portfolio:
         self.w_optims = []
         self.sharpes = []
         self.risk_budget = np.array(len(self.symbols)*[1./len(self.symbols), ])
+        self.collect_data()
+        self.position = None
 
+    def collect_data(self):
+        for t in self.symbols+["SPY"]:
+            ticker = yf.Ticker(t)
+            close = ticker.history(period=self.period).Close#.rolling(1).mean()
+            if t == "SPY":
+                self.benchmark = np.log(close).diff().dropna()
+                self.benchmark.name = "SPY"
+            else:
+                self.data[t] = np.log(close).diff().dropna()
 
     @property
     def mean_market_return(self):
@@ -77,25 +87,26 @@ class Portfolio:
         return returns
 
     def optimize(self):
-        cov = self.data.cov()*self.trade_days
         if not self.rebalance:
-            self.w_optim = self.optimizer(self.metric, len(self.symbols),
-                                          (self.capm_return(self.data), cov, self.risk_budget, self.gamma), (0, 1),
-                                          self.constraint)[0]
-            self.w_optims.append(self.w_optim)
+            self._minimizer(self.data)
             self.position = pd.DataFrame(np.tile(self.w_optim, (len(self.data.index), 1)),
                                          columns=self.symbols, index=self.data.index)
         else:
             self.position = pd.DataFrame(0, columns=self.symbols, index=self.data.index)
             for i in range(self.rebalance, len(self.data), self.rebalance):
                 window = self.data[self.symbols].iloc[i - self.rebalance:i]  # use data from self.rebalance days prior
-                self.rebalance_index.append(window.index[-1])
-                cov = window.cov()*self.trade_days
-                self.w_optim = self.optimizer(self.metric, len(self.symbols),
-                                              (self.capm_return(window), cov, self.risk_budget, self.gamma), (0, 1), self.constraint)[0]
+                self._minimizer(window)
                 self.position.loc[window.index] = self.w_optim
-                self.w_optims.append(self.w_optim)
-                self.sharpes.append(-metrics.sharpe(self.w_optim, self.capm_return(window), cov, 0.01))
+
+    def _minimizer(self, data):
+        cov = data.cov() * self.trade_days
+        self.w_optim = self.optimizer(self.metric, len(self.symbols),
+                                      (self.capm_return(data), cov, self.risk_budget, self.gamma), (0, 1),
+                                      self.constraint)[0]
+        self.w_optims.append(self.w_optim)
+        self.sharpes.append(-metrics.sharpe(self.w_optim, self.capm_return(data), cov, 0.01))
+        self.w_optims.append(self.w_optim)
+        self.rebalance_index.append(data.index[-1])
 
     @property
     def portfolio_returns(self):

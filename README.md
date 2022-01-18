@@ -45,7 +45,7 @@ As an example, imagine a portfolio constructed out of S&P 500 sector ETFs. The c
 ```shell
 rpp XLC XLY XLP XLE XLF XLV XLI XLB XLRE XLK XLU --period 2y --tune 20 10 50 5
 ```
-produces the output
+produces the output 
 
 ```shell
 Optimal allocation of 10000.0
@@ -67,14 +67,14 @@ Average Sharpe ratio 2.385
 
 ```
 
-and the following 4 plots:
+and saves the following 4 plots in in the directory ``./plots``:
 
 ![](plots/sample_perf.png)
 ![](plots/sample_weights.png)
 ![](plots/sample_sharpes.png)
 ![](plots/sample_drawdown.png)
 
-in the directory ``./plots`` In this case, the hyperparameter tuner chooses ``(gamma, rebalance )`` to be ``(0.37, 15)``
+ In this case, the hyperparameter tuner chooses ``(gamma, rebalance )`` to be ``(0.37, 15)``
 meaning that the optimal portfolio is one that is rebalanced every 15 trading days and one that gives slight preference 
 to risk contribution diversification over maximizing the Sharpe ratio. 
 
