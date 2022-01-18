@@ -14,7 +14,7 @@ def grid_search(Pf, *args):
     gammas = np.linspace(0, 1, args[0])
     rebalances = np.arange(args[1], args[2], args[3])
     metric = np.zeros([len(gammas), len(rebalances)])
-    for ig in tqdm(gammas):
+    for ig in tqdm(range(len(gammas))):
         for ir, rebalance in enumerate(rebalances):
             Pf.gamma = gammas[ig]
             Pf.rebalance = rebalance
