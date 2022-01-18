@@ -3,11 +3,12 @@ import numpy as np
 
 def rcp_error(w, mean, cov, risk_budget, gamma=0.2):
     """
-    risk contribution error compared to target.
+    risk contribution error compared to target convex combined with sharpe ratio
 
     :param w:
     :param cov: pd.DataFrame annualized covariance
     :param risk_budget: desired risk distribution in the portfolio
+    :param gamma: convex combination parameter
     :return:
     """
     w = np.array(w)

@@ -188,9 +188,9 @@ class Portfolio:
     def summary(self):
         print(f"Optimal allocation of {self.cash}")
         for i, symbol in enumerate(self.symbols):
-            print(f"{symbol}: {self.w_optim[i]*self.cash}")
+            print(f"{symbol}: {round(self.w_optim[i]*self.cash, 4)}")
         print("---------------------------")
-        print(f"CAGR {self.cagr}")
-        print(f"Average Sharpe ratio {np.mean(self.sharpes)}")
+        print(f"CAGR {round(self.cagr, 3)}")
+        print(f"Average Sharpe ratio {round(np.mean(self.sharpes), 3)}")
 
 
