@@ -37,6 +37,8 @@ class Portfolio:
                  args=False):
         self.args = args if args else None
         self.symbols = args.symbols if args else symbols
+        if isinstance(self.symbols, str):
+            self.symbols = [self.symbols]
         self.period = args.period if args else period
         self.rebalance = int(args.rebalance) if args else rebalance
         self.leverage = args.leverage if args else leverage
@@ -63,7 +65,7 @@ class Portfolio:
             close = ticker.history(period=self.period).Close#.rolling(1).mean()
             if t == "SPY":
                 self.benchmark = np.log(close).diff().dropna()
-                self.benchmark.name = "SPY"
+                self.benchmark.name = "benchmark"
             else:
                 self.data[t] = np.log(close).diff().dropna()
 
@@ -80,9 +82,8 @@ class Portfolio:
         returns = data_.copy()
         returns = returns.join(self.benchmark, how="left")
         cov = returns.cov()
-        betas = cov["SPY"] / cov.loc["SPY", "SPY"]
-        betas.drop("SPY", inplace=True)
-        benchmark_mean = returns["SPY"].mean()*self.trade_days
+        betas = (cov["benchmark"] / cov.loc["benchmark", "benchmark"]).drop("benchmark")
+        benchmark_mean = returns["benchmark"].mean()*self.trade_days
         returns = self.risk_free_rate + betas * (benchmark_mean - self.risk_free_rate)
         return returns
 
@@ -91,12 +92,14 @@ class Portfolio:
             self._minimizer(self.data)
             self.position = pd.DataFrame(np.tile(self.w_optim, (len(self.data.index), 1)),
                                          columns=self.symbols, index=self.data.index)
-        else:
+        elif self.rebalance > 0:
             self.position = pd.DataFrame(0, columns=self.symbols, index=self.data.index)
             for i in range(self.rebalance, len(self.data), self.rebalance):
                 window = self.data[self.symbols].iloc[i - self.rebalance:i]  # use data from self.rebalance days prior
                 self._minimizer(window)
                 self.position.loc[window.index] = self.w_optim
+        else:
+            raise ValueError(f"{self.rebalance} cannot be interpreted as a holding duration")
 
     def _minimizer(self, data):
         cov = data.cov() * self.trade_days
