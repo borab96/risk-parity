@@ -1,8 +1,10 @@
-# Risk-parity portfolio optimization
+# Hierarchical risk-parity portfolio optimization
 
-A command line applet written in python for risk-parity based portfolio optimization.
+A command line applet written in python for hierarchical risk-parity based portfolio optimization.
 
 ## Theory
+
+TODO
 
 ## Usage
 
@@ -25,11 +27,13 @@ rpp [-h] [--cash CASH] [--period {1mo,3mo,6mo,1y,2y,5y,10y,ytd,max}]
 
 The hyperparameters of the optimization algorithm are ``gamma`` and ``rebalance``. The former
 controls the convex combination of risk parity error minimization and Sharpe ratio
-maximization and the latter specifies a holding period after which the optimizer is run again. 
+maximization and the latter specifies a holding period after which the optimizer is run again. The tuner seeks to 
+maximize the Sharpe ratio. The reasoning is that the hyperparameter space represents a space of risk parity optimized 
+solutions, at least for ``gamma<1/2`` which should now be ranked by the returns they offer. 
 
 The backtester backfills positions after the optimal weights are computed. The so-called in-sample results assume
 knowledge of the future time window. To get out-of-sample results, the positions have to shifted one window to the future
-so that the trader positions themself based on the optimizer's result from the past window.
+so that the trader positions themself based on the optimizer's result from the past window. Forecasting is not implemented.
 
 ``--gamma 1`` runs a Sharpe optimizer while 
 ``--gamma 0`` runs a risk parity optimizer
@@ -37,13 +41,13 @@ so that the trader positions themself based on the optimizer's result from the p
 The ``--tune`` setting runs a gridsearch to optimize the Sharpe ratio among
 optimal solutions. 
 
-The ``--period`` setting sets the backtest period. I would not recommend going below "2y".
+The ``--period`` setting sets the backtest period. 
 
 ## Example: Sector ETFs
 
 As an example, imagine a portfolio constructed out of S&P 500 sector ETFs. The command
 ```shell
-rpp XLC XLY XLP XLE XLF XLV XLI XLB XLRE XLK XLU --period 2y --tune 20 10 50 5
+rpp XLC XLY XLP XLE XLF XLV XLI XLB XLRE XLK XLU --period 2y --tune 20 10 50 5 --cluster False
 ```
 produces the output 
 
@@ -67,15 +71,26 @@ Average Sharpe ratio 2.385
 
 ```
 
-and saves the following 4 plots in in the directory ``./plots``:
+and saves the following 4 plots in the directory ``./plots``:
 
 ![](plots/sample_perf.png)
 ![](plots/sample_weights.png)
 ![](plots/sample_sharpes.png)
 ![](plots/sample_drawdown.png)
 
+> The actual plots are interactive plotly figures in html format
+
  In this case, the hyperparameter tuner chooses ``(gamma, rebalance )`` to be ``(0.37, 15)``
 meaning that the optimal portfolio is one that is rebalanced every 15 trading days and one that gives slight preference 
-to risk contribution diversification over maximizing the Sharpe ratio. 
+to risk contribution diversification over maximizing the Sharpe ratio. The clustering algorithm is turned off because
+our portfolio choice of SPY sectors is already hierarchical in nature. 
+
+## Example: Many correlated assets
+
+The file ``notebooks/top50.txt`` contains a list of the 50 largest US companies at the time it was saved (Jan 2022).
+In this case we turn the clustering algorithm on to get more robust optimal portfolios. See [this notebook](notebooks/clustering.ipynb)
+for details. Because the clustering algorithm learns how to diversify based on correlation hierarchies, we don't really need
+to enforce risk parity error minimization here. While not implemented, the optimization metric for each cluster could be chosen
+to simply be returns themselves. 
 
  

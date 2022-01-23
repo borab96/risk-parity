@@ -15,9 +15,9 @@ def main():
     parser.add_argument('--rebalance', dest='rebalance', action='store', type=float,
                         default=0,
                         help='how frequently should the portfolio be rebalanced')
-    parser.add_argument('--to_pdf', dest='to_pdf', action='store', type=bool,
-                        default=False,
-                        help='If true, prepares performance report')
+    parser.add_argument('--save_fig', dest='save_fig', action='store', type=bool,
+                        default=True,
+                        help='If true saves figures in plots dir')
     parser.add_argument('--leverage', dest='leverage', action='store', type=float,
                         default=1.0,
                         help='Leverage factor. No leverage by default')
@@ -31,8 +31,16 @@ def main():
                         default=0.2,
                         help='set gamma hyperparameter. gamma=1 is sharpe maximization, '
                              'gamma=0 is risk parity optimization')
-
+    parser.add_argument('--cluster', dest='cluster', action='store', type=bool,
+                        default=True,
+                        help='If true, does hierarchically clustered optimization')
     args = parser.parse_args()
+    try:
+        with open(args.symbols[0], 'r') as f:
+            args.symbols = f.read().splitlines()
+            f.close()
+    except FileNotFoundError:
+        pass
     Pf = Portfolio(args=args)
     if args.tune:
         print("Running grid search")
@@ -47,7 +55,6 @@ def main():
     Pf.plot_weights()
     Pf.plot_drawdown()
     Pf.summary()
-
 
 
 if __name__ == '__main__':
