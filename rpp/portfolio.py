@@ -7,6 +7,7 @@ import rpp.plot_utils as plt_
 import yfinance as yf
 from tqdm import tqdm as tqdm_cli
 from tqdm.notebook import tqdm as tqdm_nb
+# from functools import cached_property # Need python 3.9
 
 
 def grid_search(Pf, *args):
@@ -64,8 +65,10 @@ class Portfolio:
         self.risk_budget = np.array(len(self.symbols)*[1./len(self.symbols), ])
         self.collect_data()
         self.position = None
+        self.covid = pd.date_range("2020-02-01", "2020-06-01", freq="B")
 
     def collect_data(self):
+        print("Donwloading ticker data")
         for t in self.tqdm(self.symbols+["SPY"]):
             ticker = yf.Ticker(t.replace(" ", ""))
             close = ticker.history(period=self.period).Close#.rolling(1).mean()
@@ -73,7 +76,10 @@ class Portfolio:
                 self.benchmark = np.log(close).diff().dropna()
                 self.benchmark.name = "benchmark"
             else:
-                self.data[t] = np.log(close).diff().dropna()
+                if not close.isnull().sum():
+                    self.data[t] = np.log(close).diff().dropna()
+                else:
+                    print(f"Dropping {t}, not enough data")
 
     @property
     def covariance(self):
@@ -117,6 +123,7 @@ class Portfolio:
                                          columns=self.symbols, index=self.data.index)
         elif self.rebalance > 0:
             self.position = pd.DataFrame(0, columns=self.symbols, index=self.data.index)
+            print("Running optimizer on windowed data")
             for i in self.tqdm(range(self.rebalance, len(self.data), self.rebalance)):
                 window = self.data[self.symbols].iloc[i - self.rebalance:i]  # use data from self.rebalance days prior
                 if self.cluster:
@@ -200,10 +207,9 @@ class Portfolio:
     def plot_sharpes(self):
         fig = plt_.plot(x=self.rebalance_index, y=self.sharpes)
         fig.add_hline(y=np.mean(self.sharpes))
-        if not self.save_fig:
-            return fig
-        else:
+        if self.save_fig:
             fig.write_html('plots/sharpes.html')
+        return fig
 
     def plot_perf(self):
         if self.rebalance:
@@ -214,30 +220,29 @@ class Portfolio:
             pf_.name = "portfolio"
             fig = plt_.plot(pd.concat([self.benchmark.cumsum().apply(np.exp), self.portfolio_value], axis=1),
                             title=f"In sample portfolio performance - no rebalancing")
-        if not self.save_fig:
-            return fig
-        else:
+        if self.save_fig:
             fig.write_html('plots/perfs.html')
-            return None
+        return fig
 
     def plot_weights(self):
         df = pd.DataFrame(self.w_optims, columns=self.symbols)
         fig = plt_.bar(df, title="Weights", barmode='stack')
-        if not self.save_fig:
-            return fig
-        else:
+        if self.save_fig:
             fig.write_html('plots/weights.html')
-            return None
+        return fig
 
+    def plot_corr(self):
+        fig = plt_.full_heat_map(self.correlation)
+        if self.save_fig:
+            fig.write_html('plots/clustered_correlations.html')
+        return fig
 
     def plot_drawdown(self):
         dds = pd.concat([self.benchmark_drawdown.rolling(10).min(), self.portfolio_drawdown.rolling(10).min()], axis=1)
         fig = plt_.plot(dds, title="Max drawdown")
-        if not self.save_fig:
-            return fig
-        else:
+        if self.save_fig:
             fig.write_html('plots/drawdown.html')
-            return None
+        return fig
 
     def summary(self):
         print(f"Optimal allocation of {self.cash}")
@@ -246,5 +251,7 @@ class Portfolio:
         print("---------------------------")
         print(f"CAGR {round(self.cagr, 3)}")
         print(f"Average Sharpe ratio {round(np.mean(self.sharpes), 3)}")
+        dd = self.portfolio_drawdown
+        print(f"Max drawdown ex. Covid {round(-1*np.min(dd.loc[~dd.index.isin(self.covid)]), 3)}")
 
 

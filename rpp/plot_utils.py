@@ -1,9 +1,23 @@
-import pandas as pd
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
 import plotly.express as px
 from scipy.spatial.distance import pdist, squareform
 from rpp.utils import cluster_corr
+import os
+
+
+def combine_outs(figs):
+    filename = f"{os.path.join(os.getcwd(), 'plots/combined.html')}"
+    dashboard = open(filename, 'w')
+    dashboard.write("<html><head></head><body>" + "\n")
+    include_plotlyjs = True
+    for fig in figs:
+        # fig.show('browser')
+        inner_html = fig.to_html(include_plotlyjs=include_plotlyjs).split('<body>')[1].split('</body>')[0]
+        dashboard.write(inner_html)
+        include_plotlyjs = False
+        dashboard.write("</body></html>" + "\n")
+    return filename
 
 
 def tree_plot(df, width=800, height=400, **kwargs):
@@ -103,22 +117,10 @@ def full_heat_map(df):
 
 
 def plot(*args, **kwargs):
-    return px.line(*args, **kwargs)
+    return px.line(*args, width=1400, height=800, **kwargs)
 
 
 def bar(*args, **kwargs):
-    return px.bar(*args, **kwargs)
-
-# plt.figure()
-# y = []
-# for i, sym in enumerate(self.symbols):
-#     y.append(np.array(self.w_optims)[:, i])
-#     if i:
-#         plt.bar(np.arange(len(self.w_optims)), y[i], label=sym, bottom=sum(y)-y[-1])
-#     else:
-#         plt.bar(np.arange(len(self.w_optims)), y[0], label=sym)
-#     plt.legend()
-#     plt.grid()
-# plt.title(f"In portfolio weight - rebalanced every {self.rebalance} days")
-# plt.savefig('plots/weights.png')
-# plt.close()
+    fig = px.bar(*args, width=1400, height=800, **kwargs)
+    fig.update_xaxes(rangeslider_visible=True)
+    return fig

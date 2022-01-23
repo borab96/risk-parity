@@ -1,5 +1,9 @@
 import argparse
 from rpp.portfolio import Portfolio, grid_search
+from rpp.plot_utils import combine_outs
+import plotly.figure_factory as ff
+import webbrowser
+import pandas as pd
 
 
 def main():
@@ -15,9 +19,9 @@ def main():
     parser.add_argument('--rebalance', dest='rebalance', action='store', type=float,
                         default=0,
                         help='how frequently should the portfolio be rebalanced')
-    parser.add_argument('--save_fig', dest='save_fig', action='store', type=bool,
-                        default=True,
-                        help='If true saves figures in plots dir')
+    parser.add_argument('--save-fig', dest='save_fig', action='store', type=bool,
+                        default=False,
+                        help='If true saves figures in plots dir individually')
     parser.add_argument('--leverage', dest='leverage', action='store', type=float,
                         default=1.0,
                         help='Leverage factor. No leverage by default')
@@ -34,6 +38,9 @@ def main():
     parser.add_argument('--cluster', dest='cluster', action='store', type=bool,
                         default=True,
                         help='If true, does hierarchically clustered optimization')
+    parser.add_argument('--browser-output', dest='browser', action='store', type=bool,
+                        default=True,
+                        help='If true, displays figures on default browser')
     args = parser.parse_args()
     try:
         with open(args.symbols[0], 'r') as f:
@@ -48,12 +55,16 @@ def main():
         print(args.gamma, args.rebalance)
     if args.short:
         raise NotImplementedError("Short portfolios not implemented")
-    Pf = Portfolio(args=args)
     Pf.optimize()
-    Pf.plot_perf()
-    Pf.plot_sharpes()
-    Pf.plot_weights()
-    Pf.plot_drawdown()
+    figs = [Pf.plot_perf(),
+            Pf.plot_corr(),
+            Pf.plot_sharpes(),
+            Pf.plot_weights(),
+            Pf.plot_drawdown()]
+            # ff.create_table(Pf.w_optim)]
+    out = combine_outs(figs)
+    if args.browser:
+        webbrowser.open(out, new=2)
     Pf.summary()
 
 

@@ -78,7 +78,7 @@ and saves the following 4 plots in the directory ``./plots``:
 ![](plots/sample_sharpes.png)
 ![](plots/sample_drawdown.png)
 
-> The actual plots are interactive plotly figures in html format
+> The plotting backend has been updated to plotly. The applet now produces a combined [html output]().
 
  In this case, the hyperparameter tuner chooses ``(gamma, rebalance )`` to be ``(0.37, 15)``
 meaning that the optimal portfolio is one that is rebalanced every 15 trading days and one that gives slight preference 
@@ -89,7 +89,9 @@ our portfolio choice of SPY sectors is already hierarchical in nature.
 
 The file ``notebooks/top50.txt`` contains a list of the 50 largest US companies at the time it was saved (Jan 2022).
 In this case we turn the clustering algorithm on to get more robust optimal portfolios. See [this notebook](https://nbviewer.org/github/borab96/risk-parity/blob/main/notebooks/clustering.ipynb)
-for details. Because the clustering algorithm learns how to diversify based on correlation hierarchies, we don't really need
+for details. 
+
+> Because the clustering algorithm learns how to diversify based on correlation hierarchies, we don't really need
 to enforce risk parity error minimization here. While not implemented, the optimization metric for each cluster could be chosen
 to simply be returns themselves. 
 

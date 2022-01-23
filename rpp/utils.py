@@ -2,7 +2,6 @@ import numpy as np
 import scipy.cluster.hierarchy as sch
 import pandas as pd
 
-
 def cluster_corr(corr_array, inplace=False):
     """
     Clusters correlation matrix. Based on https://wil.yegelwel.com/cluster-correlation-matrix/
@@ -33,5 +32,6 @@ def linkage(mat, tree=False):
         return sch.to_tree(link)
     else:
         return link
+
 
 
