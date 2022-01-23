@@ -18,10 +18,36 @@ pip install .
 Run ``rpp -h`` for a list of settings that can be specified. The only requirement is the specification of a list of symbols.
 The help command returns 
 ```shell
-rpp [-h] [--cash CASH] [--period {1mo,3mo,6mo,1y,2y,5y,10y,ytd,max}]
-           [--rebalance REBALANCE] [--to_pdf TO_PDF] [--leverage LEVERAGE]
+usage: rpp [-h] [--cash CASH] [--period {1mo,3mo,6mo,1y,2y,5y,10y,ytd,max}]
+           [--rebalance REBALANCE] [--save-fig SAVE_FIG] [--leverage LEVERAGE]
            [--short SHORT] [--tune TUNE TUNE TUNE TUNE] [--gamma GAMMA]
+           [--cluster CLUSTER] [--browser-output BROWSER]
            list of symbols [list of symbols ...]
+
+Portfolio optimizer.
+
+positional arguments:
+  list of symbols       symbols of holdings or equity universe
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --cash CASH           starting cash
+  --period {1mo,3mo,6mo,1y,2y,5y,10y,ytd,max}
+                        start date of lookback period
+  --rebalance REBALANCE
+                        how frequently should the portfolio be rebalanced
+  --save-fig SAVE_FIG   If true saves figures in plots dir individually
+  --leverage LEVERAGE   Leverage factor. No leverage by default
+  --short SHORT         Allow short selling?
+  --tune TUNE TUNE TUNE TUNE
+                        Run grid search? arg[0]: size of gammas, arg[1:]
+                        arguments of np.arange
+  --gamma GAMMA         set gamma hyperparameter. gamma=1 is sharpe
+                        maximization, gamma=0 is risk parity optimization
+  --cluster CLUSTER     If true, does hierarchically clustered optimization
+  --browser-output BROWSER
+                        If true, displays figures on default browser
+
 ...
 ```
 
@@ -78,7 +104,7 @@ and saves the following 4 plots in the directory ``./plots``:
 ![](plots/sample_sharpes.png)
 ![](plots/sample_drawdown.png)
 
-> The plotting backend has been updated to plotly. The applet now produces a combined [html output]().
+> The plotting backend has been updated to plotly. The applet now produces a combined [html output](https://htmlpreview.github.io/?https://github.com/borab96/risk-parity/blob/main/plots/combined_sample.html).
 
  In this case, the hyperparameter tuner chooses ``(gamma, rebalance )`` to be ``(0.37, 15)``
 meaning that the optimal portfolio is one that is rebalanced every 15 trading days and one that gives slight preference 
