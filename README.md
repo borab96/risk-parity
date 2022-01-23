@@ -88,7 +88,7 @@ our portfolio choice of SPY sectors is already hierarchical in nature.
 ## Example: Many correlated assets
 
 The file ``notebooks/top50.txt`` contains a list of the 50 largest US companies at the time it was saved (Jan 2022).
-In this case we turn the clustering algorithm on to get more robust optimal portfolios. See [this notebook](notebooks/clustering.ipynb)
+In this case we turn the clustering algorithm on to get more robust optimal portfolios. See [this notebook](https://nbviewer.org/github/borab96/risk-parity/blob/main/notebooks/clustering.ipynb)
 for details. Because the clustering algorithm learns how to diversify based on correlation hierarchies, we don't really need
 to enforce risk parity error minimization here. While not implemented, the optimization metric for each cluster could be chosen
 to simply be returns themselves. 
