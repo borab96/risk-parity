@@ -1,11 +1,18 @@
 <h1 align="center">Clustered portfolio optimization</h1>
 <p align="center">A scalable hierarchical risk parity optimizer</p>
 
-A command line applet written in python for hierarchical risk-parity based portfolio optimization.
-
 ## Theory
 
 TODO
+
+## Implemented features
+
+- CLI
+- Blended risk parity and sharpe optimization
+- Periodic rebalancing
+- Optimization on hierarchical cluster trees for stable diversification
+- Gridsearch tuning of hyperparameters
+- Simple backtest report 
 
 ## Usage
 
