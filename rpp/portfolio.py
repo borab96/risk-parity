@@ -7,6 +7,7 @@ import rpp.plot_utils as plt_
 import yfinance as yf
 from tqdm import tqdm as tqdm_cli
 from tqdm.notebook import tqdm as tqdm_nb
+import copy
 # from functools import cached_property # Need python 3.9
 
 
@@ -16,13 +17,15 @@ def grid_search(Pf, *args):
     metric = np.zeros([len(gammas), len(rebalances)])
     for ig in tqdm_cli(range(len(gammas))):
         for ir, rebalance in enumerate(rebalances):
+            Pf.reset()
             Pf.gamma = gammas[ig]
             Pf.rebalance = rebalance
             Pf.optimize()
             if Pf.sharpe > metric.max():
                 gamma_opt, rebalance_opt = gammas[ig], rebalance
+                Pf_opt = copy.deepcopy(Pf)
             metric[ig, ir] = Pf.sharpe
-    return gamma_opt, rebalance_opt
+    return gamma_opt, rebalance_opt, Pf_opt
 
 
 class Portfolio:
@@ -58,14 +61,18 @@ class Portfolio:
         self.metric = metrics.rcp_error
         self.constraint = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0},
                            {'type': 'ineq', 'fun': lambda w: w})
+        self.collect_data()
+        self.reset()
+        self.covid = pd.date_range("2020-02-01", "2020-06-01", freq="B")
+        self.prog_bar_disable = False
+
+    def reset(self):
         self.w_optim = None
         self.rebalance_index = []
         self.w_optims = []
         self.sharpes = []
-        self.risk_budget = np.array(len(self.symbols)*[1./len(self.symbols), ])
-        self.collect_data()
+        self.risk_budget = np.array(len(self.symbols) * [1. / len(self.symbols), ])
         self.position = None
-        self.covid = pd.date_range("2020-02-01", "2020-06-01", freq="B")
 
     def collect_data(self):
         print("Donwloading ticker data")
@@ -123,8 +130,9 @@ class Portfolio:
                                          columns=self.symbols, index=self.data.index)
         elif self.rebalance > 0:
             self.position = pd.DataFrame(0, columns=self.symbols, index=self.data.index)
-            print("Running optimizer on windowed data")
-            for i in self.tqdm(range(self.rebalance, len(self.data), self.rebalance)):
+            print(f"Running optimizer on windowed data with gamma={self.gamma}, rebalance={self.rebalance}, "
+                  f"clustering={self.cluster} \n")
+            for i in self.tqdm(range(self.rebalance, len(self.data), self.rebalance), disable=self.prog_bar_disable):
                 window = self.data[self.symbols].iloc[i - self.rebalance:i]  # use data from self.rebalance days prior
                 if self.cluster:
                     self.cluster_minimizer(window)

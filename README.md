@@ -13,8 +13,9 @@ TODO
 - Optimization on hierarchical cluster trees for stable diversification
 - Gridsearch tuning of hyperparameters
 - Simple backtest report 
+- TODO refactor and document API so that it is cleaner and customizable
 
-## Usage
+## CLI Usage
 
 To install, run
 ```shell
@@ -77,7 +78,7 @@ optimal solutions.
 
 The ``--period`` setting sets the backtest period. 
 
-## Example: Sector ETFs
+### Example: Sector ETFs
 
 As an example, imagine a portfolio constructed out of S&P 500 sector ETFs. The command
 ```shell
@@ -87,25 +88,26 @@ produces the output
 
 ```shell
 Optimal allocation of 10000.0
-XLC: 0.0
-XLY: 1298.4416
-XLP: 80.9326
-XLE: 616.2989
-XLF: 1186.8328
-XLV: 1930.6441
-XLI: 1265.3073
-XLB: 0.0
-XLRE: 0.0
-XLK: 3621.5429
-XLU: 0.0
+XLC: 1692.0266
+XLY: 1480.0659
+XLP: 594.0209
+XLE: 126.8987
+XLF: 122.0668
+XLV: 727.311
+XLI: 781.7656
+XLB: 1100.4216
+XLRE: 1763.8595
+XLK: 867.966
+XLU: 743.5974
 ---------------------------
-CAGR 0.238
-Average Sharpe ratio 2.385
+CAGR 0.122
+Average Sharpe ratio 1.815
+Max drawdown ex. Covid 0.085
 
 
 ```
 
-and saves the following 4 plots in the directory ``./plots``:
+and saves the following 4 plots in the directory ``./plots`` (if ``--save-fig True``):
 
 ![](plots/sample_perf.png)
 ![](plots/sample_weights.png)
@@ -119,13 +121,20 @@ meaning that the optimal portfolio is one that is rebalanced every 15 trading da
 to risk contribution diversification over maximizing the Sharpe ratio. The clustering algorithm is turned off because
 our portfolio choice of SPY sectors is already hierarchical in nature. 
 
-## Example: Many correlated assets
+### Example: Many correlated assets
 
 The file ``notebooks/top50.txt`` contains a list of the 50 largest US companies at the time it was saved (Jan 2022).
 In this case we turn the clustering algorithm on to get more robust optimal portfolios. See [this notebook](https://nbviewer.org/github/borab96/risk-parity/blob/main/notebooks/clustering.ipynb)
 for details. The hierarchical structure can be inferred from the plot below
 
 ![](plots/sample_corr.png)
+
+The command
+```shell
+rpp notebooks/top50.txt --period 5y --cluster True --gamma 0 --rebalance 25 --browser True
+```
+runs the hierarchical optimizer on 25 day windows and produces a 5 year backtest report displayed in a new
+tab on the default system browser.
 
 > Because the clustering algorithm learns how to diversify based on correlation hierarchies, we don't really need
 to enforce risk parity error minimization here. While not implemented, the optimization metric for each cluster could be chosen

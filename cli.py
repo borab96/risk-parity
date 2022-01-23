@@ -51,11 +51,15 @@ def main():
     Pf = Portfolio(args=args)
     if args.tune:
         print("Running grid search")
-        args.gamma, args.rebalance = grid_search(Pf, *args.tune)
-        print(args.gamma, args.rebalance)
+        Pf.prog_bar_disable = True
+        args.gamma, args.rebalance, Pf = grid_search(Pf, *args.tune)
+        Pf.prog_bar_disable = False
+        print(Pf.gamma, Pf.rebalance)
+    else:
+        Pf.optimize()
     if args.short:
         raise NotImplementedError("Short portfolios not implemented")
-    Pf.optimize()
+
     figs = [Pf.plot_perf(),
             Pf.plot_corr(),
             Pf.plot_sharpes(),
