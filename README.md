@@ -1,4 +1,5 @@
-# Hierarchical risk-parity portfolio optimization
+<h1 align="center">Clustered portfolio optimization</h1>
+<p align="center">A scalable hierarchical risk parity optimizer</p>
 
 A command line applet written in python for hierarchical risk-parity based portfolio optimization.
 
